@@ -1,0 +1,10 @@
+{
+  "slug": "whack-a-mole",
+  "name": "Whack a Mole",
+  "description": "",
+  "boards": [
+    "grid"
+  ],
+  "createdAt": "2026-09-27T18:53:35.120Z",
+  "updatedAt": "2026-09-27T19:13:56.411Z"
+}
