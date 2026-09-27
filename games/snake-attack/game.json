@@ -1,0 +1,10 @@
+{
+  "slug": "snake-attack",
+  "name": "Snake attack",
+  "description": "A snake that eats apples",
+  "boards": [
+    "grid"
+  ],
+  "createdAt": "2026-09-27T19:48:16.693Z",
+  "updatedAt": "2026-09-27T19:49:27.582Z"
+}
