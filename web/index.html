@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>chipvibe</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>" />
+  </head>
+  <body>
+    <header class="topbar">
+      <button class="brand" id="go-home" title="All games">🎮 chipvibe</button>
+
+      <div class="switcher">
+        <select id="game-switcher" aria-label="Current game"></select>
+        <button class="primary" id="btn-new">＋ New game</button>
+      </div>
+
+      <div class="topbar-right">
+        <label class="model">
+          🧠
+          <select id="model" aria-label="AI model"></select>
+        </label>
+        <button class="chip" id="usage-chip" title="Tokens used by the AI">🪙 …</button>
+        <button class="ghost" id="btn-improve">🛠 Improve the app</button>
+      </div>
+    </header>
+
+    <!-- ── Home: pick or start a game ──────────────────────────────── -->
+    <main id="home" class="home">
+      <h1>What shall we play?</h1>
+      <div class="game-grid" id="game-grid"></div>
+    </main>
+
+    <!-- ── A game: chat + program ──────────────────────────────────── -->
+    <main id="game" class="game" hidden>
+      <section class="chat-col">
+        <div class="game-head">
+          <div>
+            <h2 id="game-name"></h2>
+            <p class="muted" id="game-desc"></p>
+          </div>
+          <button class="hw-chips" id="btn-hardware" title="Change hardware"></button>
+        </div>
+
+        <div class="thread" id="thread"></div>
+
+        <form class="composer" id="composer">
+          <textarea id="message" rows="2" placeholder="Tell the AI what to make or change… e.g. “Make a whack-a-mole where red lights pop up and I have to tap them fast”"></textarea>
+          <button class="primary big" id="btn-send" type="submit">Send ➤</button>
+        </form>
+      </section>
+
+      <aside class="side-col">
+        <section class="panel">
+          <h3>▶ Put it on the board</h3>
+          <p class="muted small" id="targets-hint">Looking for boards…</p>
+          <div id="targets" class="targets"></div>
+          <div class="row">
+            <button class="ghost small" id="btn-rescan">🔄 Look again</button>
+          </div>
+          <button class="primary big wide" id="btn-program" disabled>Program</button>
+          <pre class="log" id="program-log" hidden></pre>
+          <details class="howto">
+            <summary>Board buttons at power-on</summary>
+            <p><b>Hold top-left</b> while switching on → WiFi setup. Join the <code>chipvibe-…</code> WiFi on a phone and pick your home network. Then boards show up here without a cable.</p>
+            <p><b>Hold top-right</b> while switching on → download the latest shared version of this game from GitHub.</p>
+          </details>
+        </section>
+
+        <section class="panel">
+          <h3>☁️ Share</h3>
+          <p class="muted small">Everything is saved on this computer automatically. Share sends this game to GitHub as a pull request.</p>
+          <button class="ghost wide" id="btn-share">Share on GitHub</button>
+          <pre class="log" id="share-log" hidden></pre>
+        </section>
+
+        <section class="panel">
+          <details id="code-box">
+            <summary>👀 See the code</summary>
+            <pre class="code" id="code"></pre>
+          </details>
+        </section>
+      </aside>
+    </main>
+
+    <!-- ── New game / hardware dialog ──────────────────────────────── -->
+    <dialog id="dlg-game">
+      <form method="dialog" id="form-game">
+        <h3 id="dlg-title">New game</h3>
+        <div id="dlg-name-fields">
+          <label>Name <input id="new-name" maxlength="60" placeholder="Whack-a-Mole" /></label>
+          <label>What's the idea? <small>(optional)</small>
+            <input id="new-desc" maxlength="200" placeholder="Tap the red lights before they vanish" />
+          </label>
+        </div>
+        <div class="label">Hardware</div>
+        <div class="hw-grid" id="hw-grid"></div>
+        <p class="error" id="dlg-error"></p>
+        <menu>
+          <button type="button" class="ghost" id="dlg-cancel">Cancel</button>
+          <button value="ok" class="primary" id="dlg-ok">Create</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <!-- ── Usage popover ───────────────────────────────────────────── -->
+    <dialog id="dlg-usage">
+      <form method="dialog">
+        <h3>🪙 AI tokens used</h3>
+        <div id="usage-body"></div>
+        <menu><button class="primary">Close</button></menu>
+      </form>
+    </dialog>
+
+    <!-- ── Improve-the-app drawer ──────────────────────────────────── -->
+    <aside class="drawer" id="drawer" hidden>
+      <div class="drawer-head">
+        <h3>🛠 Improve the app</h3>
+        <button class="ghost" id="btn-close-drawer" aria-label="Close">✕</button>
+      </div>
+      <p class="muted small">Ask for changes to this app — colours, buttons, layout, new features. The AI edits the app and it reloads. Every change can be undone.</p>
+      <div class="thread" id="ui-thread"></div>
+      <form class="composer" id="ui-composer">
+        <textarea id="ui-message" rows="2" placeholder="e.g. “Make the Send button green and bigger”"></textarea>
+        <button class="primary" type="submit" id="btn-ui-send">Send</button>
+      </form>
+      <div class="row">
+        <button class="ghost small" id="btn-ui-undo">↩️ Undo last change</button>
+        <button class="ghost small" id="btn-ui-share">☁️ Share app changes</button>
+        <a class="small" href="/safe" target="_blank" rel="noopener">🛟 Safe undo page</a>
+      </div>
+      <pre class="log" id="ui-log" hidden></pre>
+    </aside>
+
+    <div id="toast" class="toast" hidden></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

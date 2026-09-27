@@ -1,0 +1,103 @@
+name: Games
+
+# Pull requests: compile every game the PR touches (all games if the
+# firmware changed), so a PR is only green if it builds.
+#
+# main: build the same set and publish each to its own rolling release,
+# game-<slug> (firmware.bin + version.txt). A board running that game
+# downloads it when the top-right button is held at power-on.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: games-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Which games?
+        id: pick
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE" 2>/dev/null || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            changed=$(git ls-files)                      # first push: everything
+          else
+            changed=$(git diff --name-only "$BASE" HEAD)
+          fi
+          if echo "$changed" | grep -qE '^(firmware/|platformio\.ini|server/stage\.mjs|server/lib/build\.mjs)'; then
+            games=$(ls games 2>/dev/null | grep -E '^[a-z0-9][a-z0-9-]*$' || true)
+          else
+            games=$(echo "$changed" | awk -F/ '$1=="games" && NF>2 {print $2}' | sort -u)
+          fi
+          games=$(for g in $games; do [ -f "games/$g/game.json" ] && echo "$g"; done | tr '\n' ' ')
+          echo "games=$games" >> "$GITHUB_OUTPUT"
+          echo "Games to build: ${games:-none}"
+
+      - uses: actions/setup-python@v5
+        if: steps.pick.outputs.games != ''
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        if: steps.pick.outputs.games != ''
+        with:
+          node-version: 20
+
+      - uses: actions/cache@v4
+        if: steps.pick.outputs.games != ''
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+
+      - name: Install PlatformIO
+        if: steps.pick.outputs.games != ''
+        run: pip install --upgrade platformio
+
+      - name: Build (and publish on main)
+        if: steps.pick.outputs.games != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: |
+          sha=$(git rev-parse --short HEAD)
+          failed=""
+          for slug in ${{ steps.pick.outputs.games }}; do
+            echo "::group::$slug"
+            version="${slug}@${sha}"
+            node server/stage.mjs "$slug"
+            if PLATFORMIO_BUILD_FLAGS="-DFIRMWARE_VERSION=\\\"${version}\\\" -DCHIPVIBE_REPO=\\\"${{ github.repository }}\\\"" \
+                 pio run -e board; then
+              if [ "$PUBLISH" = "true" ]; then
+                mkdir -p "out/$slug"
+                cp .pio/build/board/firmware.bin "out/$slug/firmware.bin"
+                echo -n "$version" > "out/$slug/version.txt"
+                tag="game-$slug"
+                gh release view "$tag" >/dev/null 2>&1 || \
+                  gh release create "$tag" --title "Game: $slug" --prerelease \
+                    --notes "Latest build of the $slug game. Hold top-right at power-on to install."
+                gh release upload "$tag" "out/$slug/firmware.bin" "out/$slug/version.txt" --clobber
+              fi
+            else
+              failed="$failed $slug"
+            fi
+            echo "::endgroup::"
+          done
+          if [ -n "$failed" ]; then
+            echo "::error::These games don't build:$failed"
+            exit 1
+          fi

@@ -1,0 +1,8 @@
+# Build output
+.pio/
+# What the server staged for the current build
+firmware/current/
+# This computer's settings, token log and app-chat history
+.chipvibe/
+.DS_Store
+node_modules/

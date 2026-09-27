@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Start chipvibe: ./start   (PORT=4400 by default; NO_OPEN=1 to skip the browser)
+set -euo pipefail
+cd "$(dirname "$0")"
+
+missing=0
+need() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "✗ $1 not found — $2"
+    missing=1
+  fi
+}
+need node   "install Node 18+ (brew install node)"
+need pio    "install PlatformIO (brew install platformio)"
+need claude "install Claude Code and log in (https://claude.com/claude-code)"
+need gh     "optional, for sharing to GitHub (brew install gh && gh auth login)"
+command -v node >/dev/null && command -v pio >/dev/null && command -v claude >/dev/null || exit 1
+
+PORT="${PORT:-4400}"
+if [ -z "${NO_OPEN:-}" ]; then
+  (sleep 1.2 && open "http://127.0.0.1:${PORT}" >/dev/null 2>&1 || true) &
+fi
+exec env PORT="$PORT" node server/index.mjs

@@ -1,0 +1,13 @@
+{
+  "name": "chipvibe",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Vibe-code games for a 3×3 LED button grid (ESP32-C3), with kids, by chatting with Claude.",
+  "scripts": {
+    "start": "./start"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

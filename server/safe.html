@@ -1,0 +1,59 @@
+<!doctype html>
+<!--
+  chipvibe undo page. Served from server/, which the "Improve the app"
+  chat cannot edit, so this keeps working even if a UI change breaks the
+  main page. Deliberately tiny and self-contained.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>chipvibe — undo app changes</title>
+    <style>
+      body { font: 17px/1.5 system-ui, sans-serif; background: #12141c; color: #eef1f7; max-width: 640px; margin: 40px auto; padding: 0 20px; }
+      h1 { font-size: 24px; }
+      button { font: inherit; font-weight: 700; padding: 14px 24px; border-radius: 12px; border: 0; background: #ff4d6d; color: #fff; cursor: pointer; }
+      button:disabled { opacity: .5; }
+      a { color: #4da3ff; }
+      li { margin: 6px 0; color: #9aa3b8; }
+      li b { color: #eef1f7; }
+      #msg { margin: 16px 0; min-height: 1.5em; }
+    </style>
+  </head>
+  <body>
+    <h1>🛟 Undo app changes</h1>
+    <p>If an "Improve the app" change broke something, undo it here. Each click undoes one change, newest first. Your games are not touched.</p>
+    <p><button id="undo">↩️ Undo the last app change</button></p>
+    <div id="msg"></div>
+    <p><a href="/">← Back to chipvibe</a></p>
+    <h2>Recent app changes</h2>
+    <ul id="list"><li>Loading…</li></ul>
+    <script>
+      const list = document.getElementById('list');
+      const msg = document.getElementById('msg');
+      async function load() {
+        const r = await fetch('/api/ui/history').then((x) => x.json()).catch(() => ({ history: [] }));
+        const items = (r.history || []).filter((m) => m.role === 'user').slice(-10).reverse();
+        list.innerHTML = '';
+        if (!items.length) list.innerHTML = '<li>No app changes yet.</li>';
+        for (const m of items) {
+          const li = document.createElement('li');
+          const b = document.createElement('b');
+          b.textContent = m.text;
+          li.append(b, ' — ' + new Date(m.at).toLocaleString());
+          list.append(li);
+        }
+      }
+      document.getElementById('undo').onclick = async (e) => {
+        e.target.disabled = true;
+        msg.textContent = 'Undoing…';
+        const r = await fetch('/api/ui/undo', { method: 'POST' });
+        const body = await r.json().catch(() => ({}));
+        msg.textContent = r.ok ? `Undone: ${body.subject.replace(/^ui: /, '')}. Reload the app to see it.` : `Couldn't undo: ${body.error}`;
+        e.target.disabled = false;
+        load();
+      };
+      load();
+    </script>
+  </body>
+</html>
