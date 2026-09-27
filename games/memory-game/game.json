@@ -1,0 +1,10 @@
+{
+  "slug": "memory-game",
+  "name": "Memory game",
+  "description": "Find all tha pares",
+  "boards": [
+    "grid"
+  ],
+  "createdAt": "2026-09-27T19:39:58.856Z",
+  "updatedAt": "2026-09-27T19:42:48.225Z"
+}
