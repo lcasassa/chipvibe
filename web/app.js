@@ -48,13 +48,20 @@ async function api(path, options = {}) {
 }
 
 let toastTimer;
-function toast(message, kind = 'info') {
+function toast(message, kind = 'info', link) {
   const t = $('#toast');
-  t.textContent = message;
+  t.textContent = `${message} `;
+  if (link) {
+    const a = el('a', null, 'View PR ↗');
+    a.href = link;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    t.append(a);
+  }
   t.className = `toast ${kind}`;
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (t.hidden = true), 5000);
+  toastTimer = setTimeout(() => (t.hidden = true), 8000);
 }
 
 /** POST and consume server-sent events. Resolves with `done` data. */
@@ -483,7 +490,7 @@ async function share(path, logEl, button) {
     a.target = '_blank';
     a.rel = 'noopener';
     logEl.append(a);
-    toast('Shared on GitHub!', 'ok');
+    toast('Shared on GitHub!', 'ok', url);
   } catch (err) {
     logTo(logEl, `❌ ${err.message}`);
     toast(err.message, 'error');
