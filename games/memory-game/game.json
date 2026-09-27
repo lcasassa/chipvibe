@@ -1,7 +1,7 @@
 {
   "slug": "memory-game",
   "name": "Memory game",
-  "description": "Find all tha pares",
+  "description": "Find all the pairs",
   "boards": [
     "grid"
   ],
