@@ -1,0 +1,10 @@
+{
+  "slug": "flyswatter",
+  "name": "flyswatter",
+  "description": "",
+  "boards": [
+    "grid"
+  ],
+  "createdAt": "2026-10-04T13:37:17.926Z",
+  "updatedAt": "2026-10-04T13:44:53.150Z"
+}
