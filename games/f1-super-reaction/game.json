@@ -1,0 +1,10 @@
+{
+  "slug": "f1-super-reaction",
+  "name": "F1 super reaction",
+  "description": "",
+  "boards": [
+    "grid"
+  ],
+  "createdAt": "2026-10-03T15:37:59.729Z",
+  "updatedAt": "2026-10-03T15:41:02.828Z"
+}
